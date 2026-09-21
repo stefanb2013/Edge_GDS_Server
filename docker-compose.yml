@@ -1,0 +1,28 @@
+services:
+  gds-server:
+    build: .
+    image: python-gds-server:latest
+    ports:
+      - "4840:4840"   # OPC UA GDS endpoint
+      - "8443:8443"   # Web admin UI
+    volumes:
+      - gds-data:/data   # database + CA/private keys/issued certs -- keep this safe
+    environment:
+      GDS_HOSTNAME: ${GDS_HOSTNAME:-localhost}
+      GDS_OPCUA_PORT: 4840
+      GDS_HTTP_PORT: 8443
+      GDS_CA_COMMON_NAME: ${GDS_CA_COMMON_NAME:-My Organization GDS Root CA}
+      GDS_CA_ORGANIZATION: ${GDS_CA_ORGANIZATION:-My Organization}
+      GDS_CA_COUNTRY: ${GDS_CA_COUNTRY:-DE}
+      GDS_CA_KEY_BITS: ${GDS_CA_KEY_BITS:-3072}
+      GDS_CA_VALID_DAYS: ${GDS_CA_VALID_DAYS:-7300}
+      GDS_ISSUED_CERT_VALID_DAYS: ${GDS_ISSUED_CERT_VALID_DAYS:-730}
+      GDS_ADMIN_USER: ${GDS_ADMIN_USER:-admin}
+      # Leave GDS_ADMIN_PASSWORD unset to get a random one printed to
+      # `docker compose logs` on first boot instead.
+      GDS_ADMIN_PASSWORD: ${GDS_ADMIN_PASSWORD:-}
+      GDS_SESSION_SECRET: ${GDS_SESSION_SECRET:-}
+    restart: unless-stopped
+
+volumes:
+  gds-data:

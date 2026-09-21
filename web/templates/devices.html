@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Push Clients — Edge GDS Server{% endblock %}
+{% block content %}
+<h1>Push clients</h1>
+<p class="muted">Devices this GDS pushes certificates to directly over OPC UA Part 12's
+    <code>ServerConfiguration</code>, for applications that don't (or can't) run a pull-mode GDS client themselves.</p>
+<p class="muted">Every configured device below is also checked automatically in the background (see
+    <a href="/settings">Settings</a> for the interval, or to turn it off) -- if a device's certificate isn't ours
+    anymore (e.g. after a factory reset), is expired, or is due for renewal, it gets re-pushed without anyone
+    having to notice and click a button.</p>
+
+<div class="panel">
+    <form method="post" action="/devices/check-now">
+        <button type="submit" class="primary">Check all devices now</button>
+    </form>
+</div>
+
+<div class="panel">
+    {% if devices %}
+    <table>
+        <thead>
+        <tr><th>Name</th><th>Endpoint</th><th>Security</th><th>Last test</th><th>Last push</th><th>Last CRL push</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for d in devices %}
+        <tr>
+            <td><a href="/devices/{{ d.id }}">{{ d.name }}</a></td>
+            <td class="muted">{{ d.endpoint_url }}</td>
+            <td>{{ d.security_policy_name }}</td>
+            <td>
+                <span class="badge {{ 'approved' if d.last_test_status == 'success' else ('rejected' if d.last_test_status == 'failed' else 'pending') }}">
+                    {{ d.last_test_status }}
+                </span>
+            </td>
+            <td>
+                <span class="badge {{ 'approved' if d.last_push_status == 'success' else ('rejected' if d.last_push_status == 'failed' else 'pending') }}">
+                    {{ d.last_push_status }}
+                </span>
+            </td>
+            <td>
+                <span class="badge {{ 'approved' if d.last_crl_push_status == 'success' else ('rejected' if d.last_crl_push_status == 'failed' else 'pending') }}">
+                    {{ d.last_crl_push_status }}
+                </span>
+            </td>
+            <td class="actions">
+                <a class="btn" href="/devices/{{ d.id }}">Configure</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No push clients configured yet.</p>
+    {% endif %}
+
+    <p style="margin-top:1rem"><a class="btn primary" href="/devices/new">+ Add push client</a></p>
+</div>
+{% endblock %}

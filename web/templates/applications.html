@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Applications — Edge GDS Server{% endblock %}
+{% block content %}
+<h1>Registered applications</h1>
+<div class="panel">
+    {% if apps %}
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th><th>Application URI</th><th>Address</th><th>Type</th><th>Status</th><th>Registered</th><th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for a in apps %}
+        <tr>
+            <td><a href="/applications/{{ a.id }}">{{ a.application_name }}</a></td>
+            <td class="muted">{{ a.application_uri }}</td>
+            <td class="muted">{{ a.discovery_hosts | join(", ") if a.discovery_hosts else "—" }}</td>
+            <td>{{ type_names.get(a.application_type, a.application_type) }}</td>
+            <td><span class="badge {{ a.status }}">{{ a.status }}</span></td>
+            <td class="muted">{{ a.created_at[:19] }}</td>
+            <td class="actions">
+                {% if a.status != "approved" %}
+                <form class="inline" method="post" action="/applications/{{ a.id }}/approve">
+                    <button type="submit" class="primary">Approve</button>
+                </form>
+                {% endif %}
+                {% if a.status != "rejected" %}
+                <form class="inline" method="post" action="/applications/{{ a.id }}/reject">
+                    <button type="submit">Reject</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No applications have registered yet. Applications register themselves over the
+        OPC UA endpoint's <code>RegisterApplication</code> method.</p>
+    {% endif %}
+</div>
+{% endblock %}

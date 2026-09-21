@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Settings — Edge GDS Server{% endblock %}
+{% block content %}
+<h1>Certificate settings</h1>
+
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+<div class="panel">
+    <h2>Root CA</h2>
+    <table>
+        <tr><th style="width:200px">Subject</th><td>{{ ca.subject_name }}</td></tr>
+        <tr><th>Valid from</th><td>{{ ca.certificate.not_valid_before_utc.strftime('%Y-%m-%d %H:%M UTC') }}</td></tr>
+        <tr><th>Valid to</th><td>{{ ca.certificate.not_valid_after_utc.strftime('%Y-%m-%d %H:%M UTC') }}</td></tr>
+    </table>
+    <p class="muted" style="margin-top:0.75rem">Renewing the root CA itself isn't offered here: it would invalidate
+        every certificate already issued under it, including ones already installed on real devices (e.g. via push
+        mode) -- that needs a deliberate migration, not a settings toggle. See the
+        <a href="/trustlist">Trust List / CA page</a> to download the current CA certificate.</p>
+</div>
+
+<div class="panel">
+    <h2>Issued certificate policy</h2>
+    <p class="muted">Governs certificates this GDS issues from now on (both pull-mode <code>StartSigningRequest</code>
+        /<code>StartNewKeyPairRequest</code> and push-mode) -- existing certificates keep whatever validity they were
+        issued with.</p>
+    <form method="post" action="/settings">
+        <div class="field">
+            <label for="issued_cert_valid_days">Signed certificate validity (days)</label>
+            <input id="issued_cert_valid_days" name="issued_cert_valid_days" type="number" min="1"
+                   value="{{ (form_override.issued_cert_valid_days if form_override else settings.issued_cert_valid_days) }}" required>
+        </div>
+        <div class="field">
+            <label for="renew_before_days">Renew starting this many days before expiry</label>
+            <input id="renew_before_days" name="renew_before_days" type="number" min="1"
+                   value="{{ (form_override.renew_before_days if form_override else settings.renew_before_days) }}" required>
+            <p class="muted" style="margin-top:0.35rem">Used by pull-mode's <code>GetCertificateStatus</code> to tell
+                an application it's time to renew.</p>
+        </div>
+        <div class="field">
+            <label for="crl_validity_days">CRL validity period (days)</label>
+            <input id="crl_validity_days" name="crl_validity_days" type="number" min="1"
+                   value="{{ (form_override.crl_validity_days if form_override else settings.crl_validity_days) }}" required>
+            <p class="muted" style="margin-top:0.35rem">How far out the Certificate Revocation List's own
+                <code>nextUpdate</code> is set each time it's (re)generated -- this GDS always builds it fresh from
+                the current revoked list, so there's no separate refresh interval to configure.</p>
+        </div>
+        <button type="submit" class="primary">Update settings</button>
+    </form>
+</div>
+
+<div class="panel">
+    <h2>Push-mode auto re-provisioning</h2>
+    <p class="muted">Push-mode devices never call the GDS back to ask "am I still good?" the way pull-mode
+        applications do with <code>GetCertificateStatus</code> -- so without this, a device that lost its
+        certificate entirely (a factory reset, a config wipe) would stay uncertified until someone noticed and
+        pushed manually. This checks every configured <a href="/devices">push client</a> in the background and
+        re-pushes automatically if its certificate isn't ours anymore, is expired, or is due for renewal.</p>
+    <form method="post" action="/settings/push-reprovision">
+        <div class="field">
+            <label><input type="checkbox" name="push_auto_reprovision_enabled" style="width:auto"
+                          {{ 'checked' if settings.push_auto_reprovision_enabled else '' }}>
+                Enabled</label>
+        </div>
+        <div class="field">
+            <label for="push_health_check_interval_seconds">Check interval (seconds)</label>
+            <input id="push_health_check_interval_seconds" name="push_health_check_interval_seconds"
+                   type="number" min="30" value="{{ settings.push_health_check_interval_seconds }}" required>
+        </div>
+        <button type="submit" class="primary">Update settings</button>
+    </form>
+</div>
+
+<div class="panel">
+    <h2>Trust list &amp; revocation</h2>
+    <p class="muted">Adding trusted/issuer certificates and revoking issued certificates (which adds them to the
+        CRL) are managed on their own pages:</p>
+    <p class="actions">
+        <a class="btn" href="/trustlist">Trust List / CA</a>
+        <a class="btn" href="/certificates">Certificates</a>
+    </p>
+</div>
+{% endblock %}

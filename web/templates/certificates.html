@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Certificates — Edge GDS Server{% endblock %}
+{% block content %}
+<h1>Issued certificates</h1>
+<p class="muted">Revoking a certificate updates the CRL immediately for pull-mode applications
+    (<code>GetTrustList</code>), and also pushes the updated CRL out to every configured
+    <a href="/devices">push client</a> right away.</p>
+<div class="panel">
+    {% if certs %}
+    <table>
+        <thead>
+        <tr><th>Application</th><th>Serial</th><th>Group</th><th>Status</th><th>Valid until</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for c in certs %}
+        {% set a = apps_by_id.get(c.application_id) %}
+        <tr>
+            <td>{% if a %}<a href="/applications/{{ a.id }}">{{ a.application_name }}</a>{% else %}<span class="muted">(deleted)</span>{% endif %}</td>
+            <td><code>{{ c.serial_number }}</code></td>
+            <td>{{ c.certificate_group }}</td>
+            <td><span class="badge {{ c.status }}">{{ c.status }}</span></td>
+            <td class="muted">{{ c.not_after[:19] }}</td>
+            <td class="actions">
+                <a class="btn" href="/certificates/{{ c.id }}/download">Download</a>
+                {% if c.status == "active" %}
+                <form class="inline" method="post" action="/certificates/{{ c.id }}/revoke"
+                      onsubmit="return confirm('Revoke this certificate?');">
+                    <button type="submit" class="danger">Revoke</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No certificates have been issued yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

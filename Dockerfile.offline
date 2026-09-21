@@ -1,0 +1,42 @@
+# Offline build variant for air-gapped hosts: installs from a local `wheels/`
+# directory instead of reaching out to PyPI, and expects the `python:3.12-slim`
+# base image to already be loaded into the local Docker image cache (e.g. via
+# `docker load` from a tarball pulled elsewhere with `crane pull python:3.12-slim
+# out.tar --platform=linux/<arch>`) instead of pulled from Docker Hub.
+#
+# Build the wheels/ directory on a machine with internet access:
+#   pip download --dest wheels/ --platform <manylinux tag(s)> \
+#     --python-version <matching python:3.12-slim's version> \
+#     --implementation cp --abi cp312 --only-binary=:all: -r requirements.txt
+#
+# Then, on the air-gapped host:
+#   docker load -i python-3.12-slim-<arch>.tar
+#   docker build -f Dockerfile.offline -t python-gds-server:latest .
+#   docker compose up -d   # picks up the already-built/tagged image, no rebuild
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY wheels/ /tmp/wheels/
+COPY requirements.txt .
+RUN pip install --no-cache-dir --no-index --find-links=/tmp/wheels -r requirements.txt \
+    && rm -rf /tmp/wheels
+
+COPY gds/ ./gds/
+COPY web/ ./web/
+COPY nodesets/ ./nodesets/
+COPY main.py ./
+
+RUN useradd --create-home --uid 1000 gds \
+    && mkdir -p /data \
+    && chown -R gds:gds /app /data
+USER gds
+
+ENV GDS_DATA_DIR=/data \
+    PYTHONUNBUFFERED=1
+
+VOLUME ["/data"]
+EXPOSE 4840 8443
+
+CMD ["python", "main.py"]

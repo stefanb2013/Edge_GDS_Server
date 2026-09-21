@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ target.username }} — Edge GDS Server{% endblock %}
+{% block content %}
+<p><a href="/users">← Users</a></p>
+<h1>{{ target.username }} <span class="badge {{ 'approved' if target.role == 'admin' else 'pending' }}">{{ target.role }}</span>
+    {% if target.must_change_password %}<span class="badge pending">must change on next login</span>{% endif %}</h1>
+
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+{% if is_self %}<p class="muted">This is your own account.</p>{% endif %}
+
+<div class="panel">
+    <h2>Role</h2>
+    <form method="post" action="/users/{{ target.username }}/role">
+        <div class="field">
+            <label for="role">Role</label>
+            <select id="role" name="role">
+                <option value="user" {{ 'selected' if target.role == 'user' else '' }}>User</option>
+                <option value="admin" {{ 'selected' if target.role == 'admin' else '' }}>Admin</option>
+            </select>
+        </div>
+        <button type="submit" class="primary">Update role</button>
+    </form>
+</div>
+
+<div class="panel">
+    <h2>Reset password</h2>
+    <p class="muted">Sets a new password and requires {{ target.username }} to change it on next login.</p>
+    <form method="post" action="/users/{{ target.username }}/reset-password">
+        <div class="field">
+            <label for="password">New password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="primary">Reset password</button>
+    </form>
+</div>
+
+<div class="panel">
+    <h2>Delete user</h2>
+    <form method="post" action="/users/{{ target.username }}/delete"
+          onsubmit="return confirm('Delete user {{ target.username }}? This cannot be undone.');">
+        <button type="submit" class="danger">Delete {{ target.username }}</button>
+    </form>
+</div>
+{% endblock %}

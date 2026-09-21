@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Edge GDS Server{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="stat-grid">
+    <div class="stat">
+        <div class="value">{{ counts.applications.pending or 0 }}</div>
+        <div class="label">Pending applications</div>
+    </div>
+    <div class="stat">
+        <div class="value">{{ counts.applications.approved or 0 }}</div>
+        <div class="label">Approved applications</div>
+    </div>
+    <div class="stat">
+        <div class="value">{{ counts.certificates.active or 0 }}</div>
+        <div class="label">Active certificates</div>
+    </div>
+    <div class="stat">
+        <div class="value">{{ counts.certificates.revoked or 0 }}</div>
+        <div class="label">Revoked certificates</div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Server info</h2>
+    <table>
+        <tr><th style="width:220px">OPC UA endpoint</th><td>{{ opcua_endpoint }}</td></tr>
+        <tr><th>Root CA</th><td>{{ ca_subject }}</td></tr>
+    </table>
+    {% if counts.applications.pending %}
+    <p style="margin-top:0.9rem"><a class="btn primary" href="/applications">Review {{ counts.applications.pending }} pending application(s) →</a></p>
+    {% endif %}
+</div>
+
+<div class="panel">
+    <h2>Recent activity</h2>
+    {% if recent %}
+    <table>
+        <thead><tr><th style="width:180px">When</th><th style="width:200px">Event</th><th>Detail</th></tr></thead>
+        <tbody>
+        {% for e in recent %}
+            <tr><td class="muted">{{ e["created_at"][:19] }}</td><td>{{ e["event"] }}</td><td>{{ e["detail"] }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No activity yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

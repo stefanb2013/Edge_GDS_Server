@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Trust List / CA — Edge GDS Server{% endblock %}
+{% block content %}
+<h1>Certificate Authority &amp; trust list</h1>
+
+<div class="panel">
+    <h2>Root CA</h2>
+    <p>{{ ca_subject }}</p>
+    <p><a class="btn" href="/trustlist/ca.crt">Download CA certificate (.crt)</a></p>
+    <details>
+        <summary class="muted">Show PEM</summary>
+        <pre class="pem">{{ ca_cert_pem }}</pre>
+    </details>
+</div>
+
+<div class="panel">
+    <h2>Current CRL</h2>
+    <p class="muted">Generated on demand from every certificate marked revoked below and handed out via the
+        OPC UA <code>GetTrustList</code> method.</p>
+    <details>
+        <summary class="muted">Show PEM</summary>
+        <pre class="pem">{{ crl_pem }}</pre>
+    </details>
+</div>
+
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+<div class="panel">
+    <h2>Additional trusted / issuer entries</h2>
+    <p class="muted">Trusted certs/CRLs are other parties' identities this GDS should vouch for to registered
+        applications; issuer entries are for CAs that sit above other CAs in a chain. Both are included in the
+        bundle returned by <code>GetTrustList</code>.</p>
+    {% if entries %}
+    <table>
+        <thead><tr><th>Kind</th><th>Label</th><th>Added</th><th></th></tr></thead>
+        <tbody>
+        {% for e in entries %}
+        <tr>
+            <td>{{ e.kind }}</td>
+            <td>{{ e.label }}</td>
+            <td class="muted">{{ e.added_at[:19] }}</td>
+            <td>
+                <form class="inline" method="post" action="/trustlist/{{ e.id }}/delete">
+                    <button type="submit" class="danger">Remove</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No additional entries uploaded.</p>
+    {% endif %}
+
+    <h2 style="margin-top:1.5rem">Add an entry</h2>
+    <form method="post" action="/trustlist/upload" enctype="multipart/form-data">
+        <div class="field">
+            <label for="kind">Kind</label>
+            <select id="kind" name="kind">
+                <option value="trusted_cert">Trusted certificate</option>
+                <option value="trusted_crl">Trusted CRL</option>
+                <option value="issuer_cert">Issuer certificate</option>
+                <option value="issuer_crl">Issuer CRL</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="label">Label</label>
+            <input id="label" name="label" placeholder="e.g. Plant SCADA CA">
+        </div>
+        <div class="field">
+            <label for="file">PEM file</label>
+            <input id="file" name="file" type="file" accept=".pem,.crt,.cer,.crl" required>
+        </div>
+        <button type="submit" class="primary">Upload</button>
+    </form>
+</div>
+{% endblock %}

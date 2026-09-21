@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ app.application_name }} — Edge GDS Server{% endblock %}
+{% block content %}
+<p><a href="/applications">← All applications</a></p>
+<h1>{{ app.application_name }} <span class="badge {{ app.status }}">{{ app.status }}</span></h1>
+
+<div class="panel">
+    <table>
+        <tr><th style="width:200px">Application Id</th><td><code>{{ app.id }}</code></td></tr>
+        <tr><th>Application URI</th><td>{{ app.application_uri }}</td></tr>
+        <tr><th>Application Type</th><td>{{ type_names.get(app.application_type, app.application_type) }}</td></tr>
+        <tr><th>Product URI</th><td>{{ app.product_uri or "—" }}</td></tr>
+        <tr><th>Discovery URLs</th><td>{{ app.discovery_urls | join(", ") if app.discovery_urls else "—" }}</td></tr>
+        <tr><th>Registered</th><td>{{ app.created_at }}</td></tr>
+        <tr><th>Last updated</th><td>{{ app.updated_at }}</td></tr>
+    </table>
+    <div class="actions" style="margin-top:1rem">
+        {% if app.status != "approved" %}
+        <form class="inline" method="post" action="/applications/{{ app.id }}/approve">
+            <button type="submit" class="primary">Approve</button>
+        </form>
+        {% endif %}
+        {% if app.status != "rejected" %}
+        <form class="inline" method="post" action="/applications/{{ app.id }}/reject">
+            <button type="submit">Reject</button>
+        </form>
+        {% endif %}
+        <form class="inline" method="post" action="/applications/{{ app.id }}/delete"
+              onsubmit="return confirm('Unregister this application and revoke its history? This cannot be undone.');">
+            <button type="submit" class="danger">Unregister</button>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Certificates</h2>
+    {% if certs %}
+    <table>
+        <thead><tr><th>Serial</th><th>Group</th><th>Status</th><th>Valid until</th><th></th></tr></thead>
+        <tbody>
+        {% for c in certs %}
+        <tr>
+            <td><code>{{ c.serial_number }}</code></td>
+            <td>{{ c.certificate_group }}</td>
+            <td><span class="badge {{ c.status }}">{{ c.status }}</span></td>
+            <td class="muted">{{ c.not_after[:19] }}</td>
+            <td class="actions">
+                <a class="btn" href="/certificates/{{ c.id }}/download">Download</a>
+                {% if c.status == "active" %}
+                <form class="inline" method="post" action="/certificates/{{ c.id }}/revoke">
+                    <button type="submit" class="danger">Revoke</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No certificates issued to this application yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

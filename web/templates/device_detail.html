@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ device.name }} — Edge GDS Server{% endblock %}
+{% block content %}
+<p><a href="/devices">← Push clients</a></p>
+<h1>{{ device.name }}</h1>
+
+<div class="panel">
+    <h2>Status</h2>
+    <table>
+        <tr>
+            <th style="width:200px">Last connection test</th>
+            <td>
+                <span class="badge {{ 'approved' if device.last_test_status == 'success' else ('rejected' if device.last_test_status == 'failed' else 'pending') }}">
+                    {{ device.last_test_status }}
+                </span>
+                {% if device.last_test_at %}<span class="muted"> — {{ device.last_test_at[:19] }}</span>{% endif %}
+                {% if device.last_test_message %}<div class="muted" style="margin-top:0.25rem">{{ device.last_test_message }}</div>{% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Last push</th>
+            <td>
+                <span class="badge {{ 'approved' if device.last_push_status == 'success' else ('rejected' if device.last_push_status == 'failed' else 'pending') }}">
+                    {{ device.last_push_status }}
+                </span>
+                {% if device.last_push_at %}<span class="muted"> — {{ device.last_push_at[:19] }}</span>{% endif %}
+                {% if device.last_push_message %}<div class="muted" style="margin-top:0.25rem">{{ device.last_push_message }}</div>{% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Last CRL push</th>
+            <td>
+                <span class="badge {{ 'approved' if device.last_crl_push_status == 'success' else ('rejected' if device.last_crl_push_status == 'failed' else 'pending') }}">
+                    {{ device.last_crl_push_status }}
+                </span>
+                {% if device.last_crl_push_at %}<span class="muted"> — {{ device.last_crl_push_at[:19] }}</span>{% endif %}
+                {% if device.last_crl_push_message %}<div class="muted" style="margin-top:0.25rem">{{ device.last_crl_push_message }}</div>{% endif %}
+                <p class="muted" style="margin-top:0.35rem">Also pushed automatically to this device whenever a
+                    certificate is revoked on the <a href="/certificates">Certificates</a> page.</p>
+            </td>
+        </tr>
+    </table>
+    <div class="actions" style="margin-top:1rem">
+        <form class="inline" method="post" action="/devices/{{ device.id }}/test">
+            <button type="submit" class="primary">Test connection</button>
+        </form>
+        <form class="inline" method="post" action="/devices/{{ device.id }}/push">
+            <button type="submit">Push certificate now</button>
+        </form>
+        <form class="inline" method="post" action="/devices/{{ device.id }}/push-crl">
+            <button type="submit">Push CRL now</button>
+        </form>
+        <form class="inline" method="post" action="/devices/{{ device.id }}/delete"
+              onsubmit="return confirm('Remove this push client configuration? This cannot be undone.');">
+            <button type="submit" class="danger">Delete</button>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Configuration</h2>
+    <form method="post" action="/devices/{{ device.id }}">
+        <div class="field">
+            <label for="name">Name</label>
+            <input id="name" name="name" value="{{ device.name }}" required>
+        </div>
+        <div class="field">
+            <label for="endpoint_url">Endpoint URL</label>
+            <input id="endpoint_url" name="endpoint_url" value="{{ device.endpoint_url }}" required>
+        </div>
+        <div class="field">
+            <label for="security_policy_uri">Security policy</label>
+            <select id="security_policy_uri" name="security_policy_uri">
+                {% for uri, label in policy_choices %}
+                <option value="{{ uri }}" {{ 'selected' if uri == device.security_policy_uri else '' }}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field">
+            <label for="security_mode">Security mode</label>
+            <select id="security_mode" name="security_mode">
+                <option value="Sign" {{ 'selected' if device.security_mode == 'Sign' else '' }}>Sign</option>
+                <option value="SignAndEncrypt" {{ 'selected' if device.security_mode == 'SignAndEncrypt' else '' }}>SignAndEncrypt</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="username">Username</label>
+            <input id="username" name="username" value="{{ device.username }}" required>
+        </div>
+        <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Leave blank to keep the current password">
+        </div>
+        <div class="field">
+            <label><input type="checkbox" name="regenerate_private_key" style="width:auto"
+                          {{ 'checked' if device.regenerate_private_key else '' }}>
+                Let the device generate its own new private key</label>
+        </div>
+        <div class="field">
+            <label><input type="checkbox" name="trust_ca_on_device" style="width:auto"
+                          {{ 'checked' if device.trust_ca_on_device else '' }}>
+                Add this GDS's root CA to the device's trust list</label>
+        </div>
+        <button type="submit" class="primary">Save changes</button>
+    </form>
+</div>
+{% endblock %}

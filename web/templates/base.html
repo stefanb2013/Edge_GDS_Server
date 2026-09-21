@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Edge GDS Server{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+{% if user %}
+<div class="topbar">
+    <div class="brand">🔐 Edge GDS Server</div>
+    <nav>
+        <a href="/" class="{{ 'active' if active == 'dashboard' else '' }}">Dashboard</a>
+        <a href="/applications" class="{{ 'active' if active == 'applications' else '' }}">Applications</a>
+        <a href="/certificates" class="{{ 'active' if active == 'certificates' else '' }}">Certificates</a>
+        <a href="/trustlist" class="{{ 'active' if active == 'trustlist' else '' }}">Trust List / CA</a>
+        <a href="/devices" class="{{ 'active' if active == 'devices' else '' }}">Push Clients</a>
+        <a href="/settings" class="{{ 'active' if active == 'settings' else '' }}">Settings</a>
+        {% if request.session.get('role') == 'admin' %}
+        <a href="/users" class="{{ 'active' if active == 'users' else '' }}">Users</a>
+        {% endif %}
+        <span class="muted">{{ user }}</span>
+        <a href="/account/password">Change password</a>
+        <a href="/logout">Log out</a>
+    </nav>
+</div>
+{% endif %}
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+</body>
+</html>

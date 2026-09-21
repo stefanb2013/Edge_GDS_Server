@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Add user — Edge GDS Server{% endblock %}
+{% block content %}
+<p><a href="/users">← Users</a></p>
+<h1>Add user</h1>
+
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+<div class="panel" style="max-width:420px">
+    <form method="post" action="/users">
+        <div class="field">
+            <label for="username">Username</label>
+            <input id="username" name="username" autocomplete="off" required autofocus>
+        </div>
+        <div class="field">
+            <label for="password">Initial password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" required>
+            <p class="muted" style="margin-top:0.35rem">The new user must change this on first login.</p>
+        </div>
+        <div class="field">
+            <label for="role">Role</label>
+            <select id="role" name="role">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <button type="submit" class="primary">Create user</button>
+    </form>
+</div>
+{% endblock %}

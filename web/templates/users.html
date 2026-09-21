@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Users — Edge GDS Server{% endblock %}
+{% block content %}
+<h1>Users</h1>
+
+<div class="panel">
+    {% if users %}
+    <table>
+        <thead><tr><th>Username</th><th>Role</th><th>Password</th><th>Created</th></tr></thead>
+        <tbody>
+        {% for u in users %}
+        <tr>
+            <td><a href="/users/{{ u.username }}">{{ u.username }}</a></td>
+            <td><span class="badge {{ 'approved' if u.role == 'admin' else 'pending' }}">{{ u.role }}</span></td>
+            <td>
+                {% if u.must_change_password %}
+                <span class="badge pending">must change on next login</span>
+                {% else %}
+                <span class="muted">—</span>
+                {% endif %}
+            </td>
+            <td class="muted">{{ u.created_at[:19] }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No users.</p>
+    {% endif %}
+
+    <p style="margin-top:1rem"><a class="btn primary" href="/users/new">+ Add user</a></p>
+</div>
+{% endblock %}

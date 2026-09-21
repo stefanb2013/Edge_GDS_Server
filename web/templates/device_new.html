@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Add push client — Edge GDS Server{% endblock %}
+{% block content %}
+<p><a href="/devices">← Push clients</a></p>
+<h1>Add push client</h1>
+
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+<div class="panel">
+    <h2>1. Browse for an OPC UA server</h2>
+    <p class="muted">Enter the server's endpoint URL (e.g. <code>opc.tcp://192.168.0.2:4840</code>) and discover what
+        it offers. This opens a plain, unauthenticated channel just to list endpoints -- the same first step any
+        OPC UA client takes before it knows what security to use.</p>
+    <form method="post" action="/devices/discover">
+        <div class="field" style="max-width:520px">
+            <label for="endpoint_url">Endpoint URL</label>
+            <input id="endpoint_url" name="endpoint_url" placeholder="opc.tcp://192.168.0.2:4840"
+                   value="{{ endpoint_url or '' }}" required>
+        </div>
+        <button type="submit" class="primary">Discover endpoints</button>
+    </form>
+</div>
+
+{% if endpoints %}
+<div class="panel">
+    <h2>2. Choose an endpoint and configure credentials</h2>
+    <form method="post" action="/devices">
+        <input type="hidden" name="endpoint_url" value="{{ endpoint_url }}">
+
+        <table>
+            <thead>
+            <tr><th></th><th>Security policy</th><th>Mode</th><th>Server application</th><th>Server certificate</th></tr>
+            </thead>
+            <tbody>
+            {% set ns = namespace(picked=false) %}
+            {% for ep in endpoints %}
+            <tr>
+                <td>
+                    {% if ep.usable_for_push %}
+                    <input type="radio" name="security" value="{{ ep.security_policy_uri }}||{{ ep.security_mode }}"
+                           {{ 'checked' if not ns.picked else '' }} required>
+                    {% set ns.picked = true %}
+                    {% else %}
+                    <input type="radio" disabled title="Not usable for push mode">
+                    {% endif %}
+                </td>
+                <td>{{ ep.security_policy_name }}</td>
+                <td>{{ ep.security_mode }}</td>
+                <td class="muted">{{ ep.server_application_uri }}</td>
+                <td class="muted">{{ ep.server_certificate_subject or "—" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% if not ns.picked %}
+        <p class="error" style="margin-top:1rem">None of this server's endpoints use a signed/encrypted security
+            mode -- push mode needs one to authenticate and install a certificate.</p>
+        {% endif %}
+
+        <div class="field" style="margin-top:1rem">
+            <label for="name">Name</label>
+            <input id="name" name="name" value="{{ default_name }}">
+        </div>
+        <div class="field">
+            <label for="username">Username</label>
+            <input id="username" name="username" required>
+        </div>
+        <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" required>
+        </div>
+        <div class="field">
+            <label><input type="checkbox" name="regenerate_private_key" style="width:auto" checked>
+                Let the device generate its own new private key</label>
+        </div>
+        <div class="field">
+            <label><input type="checkbox" name="trust_ca_on_device" style="width:auto" checked>
+                Add this GDS's root CA to the device's trust list</label>
+        </div>
+
+        <button type="submit" class="primary" {{ 'disabled' if not ns.picked else '' }}>Save push client</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}
