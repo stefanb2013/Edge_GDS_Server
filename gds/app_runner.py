@@ -1,14 +1,10 @@
-"""Shared server startup/shutdown, used by both entrypoints:
+"""Shared server startup/shutdown, used by main.py (plain `python main.py`
+for local dev, and the Docker image's CMD).
 
-  main.py            -- plain `python main.py` (dev, and the Docker image)
-  windows_service.py -- wrapped as a Windows Service by pywin32
-
-Split out so the Windows service wrapper doesn't have to duplicate startup
-logic, and so it has a clean way to ask the server to stop: uvicorn's usual
-shutdown path is an OS signal (Ctrl+C / SIGTERM), which a Windows Service
-can't rely on the same way -- SvcStop runs on a different thread than the
-asyncio event loop, so it needs an asyncio.Event it can signal instead of a
-plain "wait for a signal".
+The optional `shutdown_event` gives a caller a clean way to ask the server
+to stop programmatically instead of relying on an OS signal (Ctrl+C /
+SIGTERM) -- useful for anything driving this from outside a plain foreground
+process.
 """
 from __future__ import annotations
 

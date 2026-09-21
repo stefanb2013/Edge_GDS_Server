@@ -8,11 +8,3 @@ data_smoketest*/
 .env
 wheels/
 *.tar
-
-# Windows packaging build output (PyInstaller / Inno Setup) -- rebuilt from
-# windows_service.spec / installer/EdgeGDSServer.iss, not checked in.
-build/
-dist/
-dist_installer/
-*.spec.bak
-edge-gds-server.log

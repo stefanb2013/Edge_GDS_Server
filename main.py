@@ -1,7 +1,6 @@
 """Entrypoint: runs the OPC UA GDS endpoint and the web admin UI together in
 one process/event loop. Used directly (`python main.py`) for local dev and
-as the Docker image's CMD; see windows_service.py for the Windows Service
-entrypoint, which shares the same startup logic via gds/app_runner.py.
+as the Docker image's CMD.
 """
 from __future__ import annotations
 

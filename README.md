@@ -66,46 +66,6 @@ python main.py
 pytest
 ```
 
-## Windows packaging (native install, alongside Docker)
-
-An addition to the Docker deployment above, not a replacement for it: the
-same application can also be built as a standalone Windows Service and
-installer, for running/testing directly on Windows 11 with no Docker and no
-separate Python install on the target machine. `main.py` (and the Docker
-image) are completely unaffected -- this only adds `windows_service.py` as
-a second entrypoint, sharing all its startup logic with `main.py` via
-`gds/app_runner.py`.
-
-**Build it** (on a Windows machine with the dev dependencies and
-[Inno Setup 6](https://jrsoftware.org/isinfo.php) installed):
-
-```powershell
-pip install -r requirements-dev.txt pyinstaller pywin32
-pyinstaller windows_service.spec              # -> dist\EdgeGDSServer\
-& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer\EdgeGDSServer.iss
-# -> dist_installer\EdgeGDSServer-Setup.exe
-```
-
-**Install it**: run `EdgeGDSServer-Setup.exe` as Administrator. It:
-
-* registers a Windows Service named `EdgeGDSServer` (**Manual start --
-  deliberately never auto-started**, by the installer or on boot; this is
-  meant for on-demand testing, not for running unattended in production),
-* opens Windows Firewall for ports 4840 (OPC UA) and 8443 (web UI),
-* writes a starter `.env` next to the installed `.exe`
-  (`C:\Program Files\Edge GDS Server\.env`) pointing `GDS_DATA_DIR` at
-  `C:\ProgramData\Edge GDS Server\data` -- see `installer\env.example` for
-  every option, all the same `GDS_*` variables as the Docker deployment,
-* adds Start Menu shortcuts (web UI, data folder, uninstaller).
-
-**Run it**: start/stop it like any Windows Service --
-`net start EdgeGDSServer` / `net stop EdgeGDSServer`, or via `services.msc`.
-It has no console window; if something goes wrong, check
-`edge-gds-server.log` next to the `.exe`. Uninstalling stops and removes the
-service and the firewall rules, but deliberately leaves
-`C:\ProgramData\Edge GDS Server\` in place -- same "treat it like a secrets
-store" reasoning as the Docker volume below.
-
 ## The GDS workflow this implements
 
 | Step | OPC UA method on the `Directory` object | Web UI equivalent |
@@ -202,7 +162,4 @@ Dockerfile, docker-compose.yml
 Dockerfile.offline   builds from a local wheels/ dir + a pre-loaded base image instead
                      of reaching PyPI/Docker Hub -- for air-gapped hosts; see its header
                      comment for the two-step fetch-elsewhere/build-here recipe
-windows_service.py    Windows Service entrypoint (pywin32) -- see "Windows packaging" above
-windows_service.spec  PyInstaller build recipe for windows_service.py
-installer/            Inno Setup script + env.example for the Windows installer
 ```

@@ -5,11 +5,10 @@ password, session secret), which are randomly generated at startup if not
 supplied -- see main.py.
 
 Docker Compose passes real environment variables directly, so there's
-nothing more to do there. A Windows Service has no equivalent easy way to
-set per-process environment variables, so as a fallback (never overriding a
-real env var that's already set) this also loads a `.env` file placed next
-to the running executable -- the installer writes one there with sensible
-Windows defaults (see installer/EdgeGDSServer.iss).
+nothing more to do there. As a fallback (never overriding a real env var
+that's already set), this also loads a `.env` file placed next to the
+running executable -- useful for a frozen (PyInstaller-style) build with no
+easy way to set per-process environment variables otherwise.
 """
 from __future__ import annotations
 
