@@ -1,7 +1,6 @@
 # Edge GDS Server
 
-A self-hosted **OPC UA Global Discovery Server (GDS)** — the OPC UA Part 12
-workflow implemented by tools like Unified Automation's **UaGDS**: OPC UA
+A self-hosted **OPC UA Global Discovery Server (GDS)**. OPC UA
 applications register themselves, a human administrator approves them, and
 approved applications can then request, renew, and revoke application
 instance certificates issued by a built-in Certificate Authority, and pull a
@@ -15,7 +14,7 @@ OPC UA endpoint, and it runs as a single Docker container.
   (register, get certs)              (approve, manage)
         │  opc.tcp :4840                  │  http(s) :8443
         ▼                                 ▼
- ┌───────────────────────┐      ┌────────────────────────┐
+ ┌──────────────────────-─┐      ┌────────────────────────┐
  │  asyncua GDS server    │      │  FastAPI web admin UI  │
  │  real OPC UA Part 12   │      │  (Jinja2 templates)    │
  │  Directory object,     │◄────►│                        │
@@ -23,11 +22,11 @@ OPC UA endpoint, and it runs as a single Docker container.
  │  official GDS nodeset  │  DB
  └───────────┬────────────┘
              │
-   ┌─────────▼─────────┐        ┌─────────────────────┐
+   ┌─────────▼────-─────┐        ┌─────────────────-────┐
    │   gds/pki.py       │        │   gds/db.py (SQLite) │
    │   Root CA, issue/  │◄──────►│   apps, certs, users,│
    │   revoke, CRL      │        │   trust list entries │
-   └────────────────────┘        └─────────────────────┘
+   └────────────────────┘        └────────────────-─────┘
              │
    /data (volume): gds.db, pki/ca, pki/issued, pki/server_instance
 ```
